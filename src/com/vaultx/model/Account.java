@@ -3,8 +3,10 @@ package com.vaultx.model;
 // Import statements for utilities and exception
 import java.util.ArrayList;
 import java.time.LocalDateTime;
-import java.util.UUID;
+
 import com.vaultx.exception.InsufficientBalanceException;
+
+
 
 
 /**
@@ -45,20 +47,18 @@ public class Account
         return accountNumber;
     }
 
-    public String getAccountHolderName()
-    {
+    public String getAccountHolderName() {
         return accountHolderName;
     }
 
-    public double getBalance()
-    {
+    public double getBalance() {
         return balance;
     }
 
-    public ArrayList<Transaction> getTransactions()
-    {
+    public ArrayList<Transaction> getTransactions() {
         return transactions;
     }
+
 
 
     /**
@@ -81,16 +81,12 @@ public class Account
      * @param amount Amount to deposit (must be > 0)
      * @throws IllegalArgumentException if amount <= 0
      */
+
     public synchronized void deposit(double amount)
     {
-        if (amount <= 0)
-        {
-            throw new IllegalArgumentException("Deposit amount must be positive.");// Validation
-        }
-        balance += amount;  // Balance update
-        // Create a new transaction record with unique ID and current timestamp
-        transactions.add(new Transaction(UUID.randomUUID().toString(), "DEPOSIT", amount, LocalDateTime.now()));
-        System.out.println("₹" + amount + " deposited successfully.");
+        if (amount <= 0) throw new IllegalArgumentException("Deposit must be positive");
+        balance += amount;
+        transactions.add(new Transaction(generateTransactionId(),Transaction.TransactionType.DEPOSIT, amount, LocalDateTime.now(), "SUCCESS", "Deposit of amount " + amount));
     }
 
 
@@ -101,39 +97,44 @@ public class Account
  * @throws InsufficientBalanceException if balance less than withdrawal amount
  */
 public synchronized void withdraw(double amount) throws InsufficientBalanceException
+{
+    if (amount <= 0)
     {
-        if (amount <= 0)
-        {
-            throw new IllegalArgumentException("Withdrawal amount must be positive.");
-        }
-        if (balance < amount)
-        {
-            throw new InsufficientBalanceException("Insufficient balance.");
-        }
-        balance -= amount;  // Balance reduce
-        // Record transaction (unique ID, type, amount, timestamp)
-        transactions.add(new Transaction(UUID.randomUUID().toString(), "WITHDRAW", amount, LocalDateTime.now()));
-        System.out.println("₹" + amount + " withdrawn successfully.");
+        throw new IllegalArgumentException("Withdraw must be positive");
     }
+    if (balance < amount)
+    {
+        throw new InsufficientBalanceException("Insufficient balance");
+    }
+    balance -= amount;
+    transactions.add(new Transaction(
+            generateTransactionId(),
+            Transaction.TransactionType.WITHDRAW,
+            amount,
+            LocalDateTime.now(),
+            "SUCCESS",
+            "Withdrawal of amount " + amount));
+}
 
     /**
      * Print last 5 transactions (most recent first) - Mini statement for user.
      * Prints a custom message if no transactions are found.
      */
-        public void printMiniStatement()
+    public List<Transaction> getMiniStatement(int n)
     {
-        System.out.println("Mini statement for Account: " + accountNumber);
-        int count = 0;
-        for (int i = transactions.size() - 1; i >= 0 && count < 5; i--, count++)
-        {
-            System.out.println(transactions.get(i).toString());
-        }
-        if (count == 0)
-        {
-            System.out.println("No transactions found.");
-        }
+        int size = transactions.size();
+        if (n > size) n = size;
+        return transactions.subList(size - n, size);
     }
+
+
+
+    private String generateTransactionId()
+    {
+        return "TXN" + System.currentTimeMillis();
     }
+}
+
 
 
 
