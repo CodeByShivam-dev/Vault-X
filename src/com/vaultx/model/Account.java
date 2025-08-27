@@ -2,12 +2,9 @@ package com.vaultx.model;
 
 // Import statements for utilities and exception
 import java.util.ArrayList;
+import java.util.List;
 import java.time.LocalDateTime;
-
-import com.vaultx.exception.InsufficientBalanceException;
-
-
-
+import com.vaultx.model.exception.InsufficientBalanceException;
 
 /**
  * Account class represents a single user's bank account.
@@ -86,7 +83,8 @@ public class Account
     {
         if (amount <= 0) throw new IllegalArgumentException("Deposit must be positive");
         balance += amount;
-        transactions.add(new Transaction(generateTransactionId(),Transaction.TransactionType.DEPOSIT, amount, LocalDateTime.now(), "SUCCESS", "Deposit of amount " + amount));
+        transactions.add(new Transaction(generateTransactionId(), Transaction.TransactionType.DEPOSIT, amount, LocalDateTime.now(), "SUCCESS", "Deposit of amount " + amount));
+
     }
 
 
