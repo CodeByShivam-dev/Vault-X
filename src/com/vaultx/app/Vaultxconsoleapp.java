@@ -1,4 +1,12 @@
 package com.vaultx.app;
+import java.util.UUID;
+import java.util.Random;
+import com.twilio.rest.api.v2010.account.Message;
+import com.twilio.type.PhoneNumber;
+
+
+
+import com.vaultx.otp.OtpService;
 
 import com.vaultx.model.Account;
 import com.vaultx.model.Transaction;
@@ -6,10 +14,12 @@ import com.vaultx.model.User;
 import java.util.*;
 import java.util.regex.Pattern;
 
+
 public class Vaultxconsoleapp
 {
     // Map to store users by their phone number
     private static final Map<String, User> usersByPhone = new HashMap<>();
+
 
     // Map to track accounts by account number
     private static final Map<Long, Account> accountsByNumber = new HashMap<>();
@@ -26,6 +36,9 @@ public class Vaultxconsoleapp
 
     // In-memory store for OTP mapping
     private static final Map<String, String> otpStore = new HashMap<>();
+
+    private static final OtpService otpService = new OtpService();
+
 
     // Main entry point for the application
     public static void main(String[] args)
@@ -118,29 +131,122 @@ public class Vaultxconsoleapp
             String choice = scanner.nextLine().trim();
             switch (choice)
             {
-                case "1" -> withdrawMoney(account);
-                case "2" -> depositMoney(account);
-                case "3" -> System.out.println("Current balance: " + account.getBalance());
-                case "4" ->
-                {
+                case "1":
+                    withdrawMoney(account);
+                    break;
+                case "2":
+                    depositMoney(account);
+                    break;
+                case "3":
+                    System.out.println("Current balance: " + account.getBalance());
+                    break;
+                case "4":
                     List<Transaction> transactions = account.getMiniStatement(5);
-                    if (transactions.isEmpty())
-                    {
+                    if (transactions.isEmpty()) {
                         System.out.println("No transactions found.");
-                    } else
-                    {
+                    } else {
                         System.out.println("Last 5 transactions:");
-                        transactions.forEach(System.out::println);
+                        for (Transaction t : transactions) {
+                            System.out.println(t);
+                        }
                     }
-                }
-                case "5" ->
-                {
+                    break;
+                case "5":
                     System.out.println("Logged out successfully.");
                     return;
-                }
-                default -> System.out.println("Invalid choice.");
+                default:
+                    System.out.println("Invalid choice.");
+                    break;
+            }
+
+        }
+    }
+
+    private static void withdrawMoney(Account account)
+    {
+        double amount = readAmount("Enter amount to withdraw: ");
+        try
+        {
+            account.withdraw(amount);
+            System.out.println("Withdrawal successful. New balance: " + account.getBalance());
+        }
+        catch (Exception e)
+        {
+            System.out.println("Error: " + e.getMessage());
+        }
+    }
+
+    private static void depositMoney(Account account)
+    {
+        double amount = readAmount("Enter amount to deposit: ");
+        try {
+            account.deposit(amount);
+            System.out.println("Deposit successful. New balance: " + account.getBalance());
+        } catch (Exception e) {
+            System.out.println("Error: " + e.getMessage());
+        }
+    }
+
+    private static String getInput(String prompt)
+    {
+        System.out.print(prompt);
+        return scanner.nextLine().trim();
+    }
+    private static String getValidInput(String prompt, Pattern pattern, String errorMsg)
+    {
+        while (true)
+        {
+            String input = getInput(prompt);
+            if (!pattern.matcher(input).matches()) {
+                System.out.println(errorMsg);
+            } else {
+                return input;
             }
         }
+    }
+
+    private static double readAmount(String prompt)
+    {
+        while (true) {
+            System.out.print(prompt);
+            String input = scanner.nextLine().trim();
+            try {
+                double amount = Double.parseDouble(input);
+                if (amount <= 0) {
+                    throw new NumberFormatException();
+                }
+                return amount;
+            } catch (NumberFormatException e) {
+                System.out.println("Please enter a valid positive number.");
+            }
+        }
+    }
+
+    private static void sendOtp(String phone)
+    {
+        String otp = otpService.sendOtp(phone); // Generates OTP using your OtpService class
+        otpStore.put(phone, otp);               // Stores OTP for later verification
+    }
+
+
+    // Sends OTP—replace this with real API for production
+
+    // Verifies entered OTP matches stored OTP
+    private static boolean verifyOtp(String phone, String otp) {
+        String storedOtp = otpStore.get(phone);
+        return otp != null && otp.equals(storedOtp);
+    }
+
+
+    // Generates a unique account number not in use
+    private static long generateUniqueAccountNumber()
+    {
+        long number;
+        Random rnd = new Random();
+        do {
+            number = 1000000000L + rnd.nextInt(900000000);
+        } while (accountsByNumber.containsKey(number));
+        return number;
     }
 
 }

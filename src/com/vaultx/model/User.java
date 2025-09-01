@@ -109,6 +109,12 @@ import java.util.UUID;
         public void setPanCard(String panCard) {
             this.panCard = panCard;
         }
+
+        public long getAccountNumber()
+        {
+            return accountNumber;
+        }
+
         /**
          * Converts User object to a human-readable string.
          * Helpful for debugging & logging.
