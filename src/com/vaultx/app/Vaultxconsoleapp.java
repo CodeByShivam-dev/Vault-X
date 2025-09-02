@@ -3,9 +3,6 @@ import java.util.UUID;
 import java.util.Random;
 import com.twilio.rest.api.v2010.account.Message;
 import com.twilio.type.PhoneNumber;
-
-
-
 import com.vaultx.otp.OtpService;
 
 import com.vaultx.model.Account;
@@ -13,7 +10,6 @@ import com.vaultx.model.Transaction;
 import com.vaultx.model.User;
 import java.util.*;
 import java.util.regex.Pattern;
-
 
 public class Vaultxconsoleapp
 {
@@ -182,10 +178,42 @@ public class Vaultxconsoleapp
         try {
             account.deposit(amount);
             System.out.println("Deposit successful. New balance: " + account.getBalance());
+            // Send deposit confirmation message
+            User user = findUserByAccount(account);
+            if (user != null) {
+                sendTransactionConfirmation(user.getPhone(), "credited", amount, account.getBalance());
+            }
         } catch (Exception e) {
             System.out.println("Error: " + e.getMessage());
         }
     }
+
+
+    private static void sendTransactionConfirmation(String phone, String type, double amount, double newBalance)
+    {
+        String messageBody = String.format(
+                "Dear customer, your account has been %s with ₹%.2f. Your new balance is ₹%.2f. Thank you for banking with VaultX!",
+                type, amount, newBalance
+        );
+        Message message = Message.creator(
+                new PhoneNumber("whatsapp:" + phone),
+                new PhoneNumber("whatsapp:+14155238886"), // Twilio sandbox WhatsApp number
+                messageBody
+        ).create();
+        System.out.println("Transaction confirmation sent with SID: " + message.getSid());
+    }
+
+    private static User findUserByAccount(Account account)
+    {
+        for (User user : usersByPhone.values()) {
+            if (user.getAccountNumber() == account.getAccountNumber()) {
+                return user;
+            }
+        }
+        return null;
+    }
+
+
 
     private static String getInput(String prompt)
     {
