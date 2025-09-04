@@ -165,6 +165,10 @@ public class Vaultxconsoleapp
         {
             account.withdraw(amount);
             System.out.println("Withdrawal successful. New balance: " + account.getBalance());
+            User user = findUserByAccount(account);
+            if (user != null) {
+                sendTransactionConfirmation(user.getPhone(), "debited", amount, account.getBalance());
+            }
         }
         catch (Exception e)
         {
